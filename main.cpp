@@ -166,6 +166,31 @@ int main() {
 	return EXIT_SUCCESS;
 }
 
-GLfloat* genVertices() {
-	
+bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius) {
+	return (x * x + y * y + z * z < radius);
+}
+
+GLfloat* genSphereMesh() {
+	GLfloat minX, minY, minZ = 1.0f;
+	GLfloat maxX, maxY, maxZ = -1.0f;
+	GLfloat x, y, z, a = 0.0f;
+
+	const GLfloat radius = 0.5f;
+	const GLint dim = 100; // number of vertices on bounding box edge
+	bool vertices[dim][dim][dim];
+
+	for (GLint i = 0; i < dim; ++i) {
+		for (GLint j = 0; j < dim; ++j) {
+			for (GLint k = 0; k < dim; ++k) {
+				a = ((GLfloat)i / (GLfloat)dim);
+				x = maxX * a + minX * (1.0f - a);
+				y = maxY * a + minY * (1.0f - a);
+				z = maxZ * a + minZ * (1.0f - a);
+				vertices[i][j][k] = isInsideSphere(x, y, z, radius);
+			}
+		}
+	}
+
+	GLfloat mesh[] = {0.0f};
+	return mesh;
 }

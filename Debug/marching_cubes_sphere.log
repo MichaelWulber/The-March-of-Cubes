@@ -1,4 +1,9 @@
 ﻿  main.cpp
+c:\users\wulbe_000\desktop\(p)oop\visual studio\projects\marching_cubes_sphere\marching_cubes_sphere\main.cpp(186): warning C4700: uninitialized local variable 'maxX' used
+c:\users\wulbe_000\desktop\(p)oop\visual studio\projects\marching_cubes_sphere\marching_cubes_sphere\main.cpp(186): warning C4700: uninitialized local variable 'minX' used
+c:\users\wulbe_000\desktop\(p)oop\visual studio\projects\marching_cubes_sphere\marching_cubes_sphere\main.cpp(187): warning C4700: uninitialized local variable 'maxY' used
+c:\users\wulbe_000\desktop\(p)oop\visual studio\projects\marching_cubes_sphere\marching_cubes_sphere\main.cpp(187): warning C4700: uninitialized local variable 'minY' used
+c:\users\wulbe_000\desktop\(p)oop\visual studio\projects\marching_cubes_sphere\marching_cubes_sphere\main.cpp(195): warning C4172: returning address of local variable or temporary: mesh
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
 glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'C:\Users\wulbe_000\Desktop\(P)OOP\Visual Studio\Projects\marching_cubes_sphere\Debug\vc120.pdb'; linking object as if no debug info
