@@ -156,8 +156,6 @@
     <None Include="core.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ImplicitFunc.h" />
-    <ClInclude Include="PolyFunc.h" />
     <ClInclude Include="Shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
