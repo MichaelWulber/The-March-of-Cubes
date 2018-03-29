@@ -197,3 +197,11 @@ GLfloat* genSphereMesh() {
 	GLfloat mesh[] = {0.0f};
 	return mesh;
 }
+
+int edgeListIndex(const bool arr[8] ){
+	int index = 0;
+	for (int i = 0; i < 8; ++i){
+		index += i * pow(2, i);
+	}
+	return index;
+}
