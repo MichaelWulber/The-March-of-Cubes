@@ -13,6 +13,10 @@
 #include "Shader.h"
 #include "LookUpTable.h"
 
+bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius);
+GLfloat* genSphereMesh();
+int edgeListIndex(const bool arr[8]);
+
 const GLint WIDTH = 1200, HEIGHT = 1200;
 int screenWidth, screenHeight;
 
@@ -175,6 +179,7 @@ GLfloat* genSphereMesh() {
 	GLfloat minX, minY, minZ = 1.0f;
 	GLfloat maxX, maxY, maxZ = -1.0f;
 	GLfloat x, y, z, a = 0.0f;
+	bool byteArray[8];
 
 	const GLfloat radius = 0.5f;
 	const GLint dim = 100; // number of vertices on bounding box edge
@@ -192,7 +197,21 @@ GLfloat* genSphereMesh() {
 		}
 	}
 
-	// ...
+	for (GLint i = 0; i < dim - 1; ++i) {
+		for (GLint j = 0; j < dim - 1; ++j) {
+			for (GLint k = 0; k < dim - 1; ++k) {
+				byteArray[0] = vertices[i][j][k];
+				byteArray[1] = vertices[i + 1][j][k];
+				byteArray[2] = vertices[i + 1][j][k + 1];
+				byteArray[3] = vertices[i][j][k + 1];
+				byteArray[4] = vertices[i][j + 1][k];
+				byteArray[5] = vertices[i + 1][j + 1][k];
+				byteArray[6] = vertices[i + 1][j + 1][k + 1];
+				byteArray[7] = vertices[i][j + 1][k + 1];
+				int index = edgeListIndex(byteArray);
+			}
+		}
+	}
 	
 	GLfloat mesh[] = {0.0f};
 	return mesh;
