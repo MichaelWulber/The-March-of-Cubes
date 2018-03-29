@@ -9,20 +9,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <vector>
-#include <unordered_map>
 
 #include "Shader.h"
-#include "PolyFunc.h"
-
-using std::vector;
-using std::unordered_map;
+#include "LookUpTable.h"
 
 const GLint WIDTH = 1200, HEIGHT = 1200;
 int screenWidth, screenHeight;
-
-// look up table for < vertices, triangles >
-unordered_map< vector<bool>, vector<GLfloat> > lookUpTable;
 
 int main() {
 	glfwInit();
@@ -200,10 +192,8 @@ GLfloat* genSphereMesh() {
 		}
 	}
 
+	// ...
+	
 	GLfloat mesh[] = {0.0f};
 	return mesh;
-}
-
-void createLookUpTable() {
-	// ...
 }

@@ -149,13 +149,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PolyFunc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="core.frag" />
     <None Include="core.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LookUpTable.h" />
     <ClInclude Include="Shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
