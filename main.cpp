@@ -68,9 +68,7 @@ int main() {
 	Shader ourShader("core.vert", "core.frag");
 
 	// Create Cube Vertices
-	std::vector<GLfloat> vec;
-	vec = genSphereMesh();
-	GLfloat *vertices = &vec[0];
+	std::vector<GLfloat> vec = genSphereMesh();
 
 	//for (int i = 0; i < vec.size() / 3; ++i) {
 	//	for (int j = 0; j < 3; ++j) {
@@ -78,8 +76,6 @@ int main() {
 	//	}
 	//	std::cout << std::endl;
 	//}
-
-	std::cout << sizeof(vertices) << std::endl;
 
 	GLuint VBO, VAO;
 	glGenVertexArrays(1, &VAO);
@@ -89,7 +85,7 @@ int main() {
 
 	// bind vertex buffer
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vec.size() * sizeof(GLfloat), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vec.size() * sizeof(GLfloat), &vec[0], GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
 	glEnableVertexAttribArray(0);
@@ -109,9 +105,10 @@ int main() {
 		ourShader.use();
 
 		// set up MVP matrix
-		glm::mat4 model = glm::mat4(1.0f);
+		glm::mat4 model(1.0f);
+		model = glm::rotate(model, (GLfloat)glfwGetTime() * -1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 view = glm::lookAt(
-			glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
+			glm::vec3(3, 3, 3), // Camera is at (4,3,3), in World Space
 			glm::vec3(0, 0, 0), // and looks at the origin
 			glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 			);
@@ -121,7 +118,7 @@ int main() {
 		glUniformMatrix4fv(MVPLoc, 1, GL_FALSE, glm::value_ptr(MVP));
 
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDrawArrays(GL_TRIANGLES, 0, vec.size() / 3);
 		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
@@ -158,7 +155,7 @@ std::vector<GLfloat> genSphereMesh() {
 
 //	const GLfloat radius = 0.5f;
 
-	const GLint dim = 25; // number of vertices on bounding box edge
+	const GLint dim = 10; // number of vertices on bounding box edge
 	bool vertices[dim][dim][dim];
 
 
