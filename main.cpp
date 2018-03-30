@@ -16,7 +16,7 @@
 
 bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius);
 GLfloat sphereImplicitFunction(GLfloat x, GLfloat y, GLfloat z);
-GLfloat* genSphereMesh();
+std::vector<GLfloat> genSphereMesh();
 int edgeListIndex(const bool arr[8]);
 std::vector<GLfloat> findVertices(int i, int j, int k, int index, GLfloat* vertex[3], GLfloat*** vals);
 GLfloat interpolate(GLfloat a, GLfloat aVal, GLfloat b, GLfloat bVal);
@@ -37,7 +37,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "setupGL", nullptr, nullptr);
+	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Marching Cubes", nullptr, nullptr);
 
 	// ensures pixels coordinates are mapped to the screen correctly (accounts for pixel density)
 	int screenWidth, screenHeight;
@@ -68,56 +68,18 @@ int main() {
 	Shader ourShader("core.vert", "core.frag");
 
 	// Create Cube Vertices
-	GLfloat vertices[] = {
-		// ABC
-		-0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,	0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 1.0f,
-		// ACD
-		-0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,	0.0f, 1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 1.0f,
-		// BFG
-		 0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,	0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 1.0f,
-		// BGC
-		 0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,	0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 1.0f,
-		// FEH
-		 0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,	0.0f, 1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 1.0f,
-		// FHG
-		 0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,	0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 1.0f,
-		// EAD
-		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,	0.0f, 1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 1.0f,
-		// EDH
-		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,	0.0f, 1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 1.0f,
-		// DCG
-		-0.5f,  0.5f,  0.5f,	1.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,	0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 1.0f,
-		// DGH
-		-0.5f,  0.5f,  0.5f,	1.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,	0.0f, 1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 1.0f,
-		// EFB
-		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,	0.0f, 1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 1.0f,
-		// EBA
-		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,	0.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 1.0f
-	};
+	std::vector<GLfloat> vec;
+	vec = genSphereMesh();
+	GLfloat *vertices = &vec[0];
+
+	//for (int i = 0; i < vec.size() / 3; ++i) {
+	//	for (int j = 0; j < 3; ++j) {
+	//		std::cout << vertices[i + j] << ", ";
+	//	}
+	//	std::cout << std::endl;
+	//}
+
+	std::cout << sizeof(vertices) << std::endl;
 
 	GLuint VBO, VAO;
 	glGenVertexArrays(1, &VAO);
@@ -127,13 +89,10 @@ int main() {
 
 	// bind vertex buffer
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vec.size() * sizeof(GLfloat), vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);
 
@@ -186,15 +145,20 @@ GLfloat sphereImplicitFunction(GLfloat x, GLfloat y, GLfloat z){
 	return (x * x + y * y + z * z);
 }
 
-GLfloat* genSphereMesh() {
-	GLfloat minX, minY, minZ = 1.0f;
-	GLfloat maxX, maxY, maxZ = -1.0f;
-	GLfloat x, y, z, a = 0.0f;
+std::vector<GLfloat> genSphereMesh() {
+	std::cout << "generating mesh..." << std::endl;
+	GLfloat minX = -1.0f;
+	GLfloat minY = -1.0f;
+	GLfloat minZ = -1.0f;
+	GLfloat maxX = 1.0f;
+	GLfloat maxY = 1.0f;
+	GLfloat maxZ = 1.0f;
+	GLfloat x, y, z, a;
 	bool byteArray[8];
 
 //	const GLfloat radius = 0.5f;
 
-	const GLint dim = 100; // number of vertices on bounding box edge
+	const GLint dim = 25; // number of vertices on bounding box edge
 	bool vertices[dim][dim][dim];
 
 
@@ -210,6 +174,7 @@ GLfloat* genSphereMesh() {
 		vertexCoord[1][i] = y;
 		vertexCoord[2][i] = z;
 	}
+	std::cout << "created vertices" << std::endl;
 
 // vertices stores 0 or 1 depending on whether vertex is inside sphere or not
 // vertexVals stores the actual value from the implicit function
@@ -229,6 +194,16 @@ GLfloat* genSphereMesh() {
 			}
 		}
 	}
+	std::cout << "created bitgrid" << std::endl;
+
+	// --- TEST ---
+	for (int i = 0; i < dim; ++i) {
+		for (int j = 0; j < dim; ++j) {
+			std::cout << vertices[i][j][dim / 2] << ", ";
+		}
+		std::cout << std::endl;
+	}
+	// --- TEST ---
 
 // Go through every cube and check vertices;
 // triangleVertices stores vertices of facets as {x0, y0, z0, x1, y1, z1, ..., xn, yn, zn}
@@ -252,9 +227,9 @@ GLfloat* genSphereMesh() {
 			}
 		}
 	}
-	
-	GLfloat mesh[] = {0.0f};
-	return mesh;
+	std::cout << "mesh complete" << std::endl;
+
+	return triangleVertices;
 }
 
 int edgeListIndex(const bool arr[8] ){
