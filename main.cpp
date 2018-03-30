@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #define GLEW_STATIC
 #include <Gl/glew.h>
@@ -14,8 +15,11 @@
 #include "LookUpTable.h"
 
 bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius);
+GLfloat sphereImplicitFunction(GLfloat x, GLfloat y, GLfloat z);
 GLfloat* genSphereMesh();
 int edgeListIndex(const bool arr[8]);
+std::vector<GLfloat> findVertices(int i, int j, int k, int index, GLfloat* vertex[3], GLfloat*** vals);
+GLfloat interpolate(GLfloat a, GLfloat aVal, GLfloat b, GLfloat bVal);
 
 const GLint WIDTH = 1200, HEIGHT = 1200;
 int screenWidth, screenHeight;
@@ -171,8 +175,15 @@ int main() {
 	return EXIT_SUCCESS;
 }
 
+const GLfloat isovalue = 0.5f;		// In this case, isovalue = radius;
+
+
 bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius) {
 	return (x * x + y * y + z * z < radius);
+}
+
+GLfloat sphereImplicitFunction(GLfloat x, GLfloat y, GLfloat z){
+	return (x * x + y * y + z * z);
 }
 
 GLfloat* genSphereMesh() {
@@ -181,22 +192,48 @@ GLfloat* genSphereMesh() {
 	GLfloat x, y, z, a = 0.0f;
 	bool byteArray[8];
 
-	const GLfloat radius = 0.5f;
+//	const GLfloat radius = 0.5f;
+
 	const GLint dim = 100; // number of vertices on bounding box edge
 	bool vertices[dim][dim][dim];
 
+
+// array of values for x, y, z
+// vertexCoord[0][] = x's, vertexCoord[1][] = y's, vertex Coord[2][] = z's
+	GLfloat* vertexCoord[3] = {new GLfloat[dim], new GLfloat[dim], new GLfloat[dim]};
 	for (GLint i = 0; i < dim; ++i) {
+		a = ((GLfloat)i / (GLfloat)dim);
+		x = maxX * a + minX * (1.0f - a);
+		y = maxY * a + minY * (1.0f - a);
+		z = maxZ * a + minZ * (1.0f - a);
+		vertexCoord[0][i] = x;
+		vertexCoord[1][i] = y;
+		vertexCoord[2][i] = z;
+	}
+
+// vertices stores 0 or 1 depending on whether vertex is inside sphere or not
+// vertexVals stores the actual value from the implicit function
+	GLfloat*** vertexVals = new GLfloat**[dim];
+	for (GLint i = 0; i < dim; ++i) {
+		vertexVals[i] = new GLfloat*[dim];
+
 		for (GLint j = 0; j < dim; ++j) {
+			vertexVals[i][j] = new GLfloat[dim];
+
 			for (GLint k = 0; k < dim; ++k) {
-				a = ((GLfloat)i / (GLfloat)dim);
-				x = maxX * a + minX * (1.0f - a);
-				y = maxY * a + minY * (1.0f - a);
-				z = maxZ * a + minZ * (1.0f - a);
-				vertices[i][j][k] = isInsideSphere(x, y, z, radius);
+				x = vertexCoord[0][i];
+				y = vertexCoord[1][j];
+				z = vertexCoord[2][k];
+				vertices[i][j][k] = isInsideSphere(x, y, z, isovalue);
+				vertexVals[i][j][k] = sphereImplicitFunction(x, y, z);
 			}
 		}
 	}
 
+// Go through every cube and check vertices;
+// triangleVertices stores vertices of facets as {x0, y0, z0, x1, y1, z1, ..., xn, yn, zn}
+	std::vector<GLfloat> triangleVertices;
+	std::vector<GLfloat> temp;
 	for (GLint i = 0; i < dim - 1; ++i) {
 		for (GLint j = 0; j < dim - 1; ++j) {
 			for (GLint k = 0; k < dim - 1; ++k) {
@@ -209,6 +246,9 @@ GLfloat* genSphereMesh() {
 				byteArray[6] = vertices[i + 1][j + 1][k + 1];
 				byteArray[7] = vertices[i][j + 1][k + 1];
 				int index = edgeListIndex(byteArray);
+
+				temp = findVertices(i, j, k, index, vertexCoord, vertexVals);
+				triangleVertices.insert(triangleVertices.end(), temp.begin(), temp.end());
 			}
 		}
 	}
@@ -219,8 +259,204 @@ GLfloat* genSphereMesh() {
 
 int edgeListIndex(const bool arr[8] ){
 	int index = 0;
+	int factor = 1;
 	for (int i = 0; i < 8; ++i){
-		index += i * pow(2, i);
+		index += arr[i] * factor;
+		factor = 2 * factor;
 	}
 	return index;
+}
+
+std::vector<GLfloat> findVertices(int i, int j, int k, int index,
+		GLfloat* vertex[3], GLfloat*** vals){
+	std::vector<GLfloat> triangleVertices;
+	int edgeNum;
+	GLfloat intersection;
+	GLfloat aVal, bVal;
+	GLfloat a, b;
+	GLfloat x, y, z;
+
+
+
+	for (int e = 0; e < 13; ++e){
+		edgeNum = aCases[index][e];
+		switch(edgeNum){
+		case -1:
+			return triangleVertices;
+		case 0:
+			y = vertex[1][j];
+			z = vertex[2][k];
+
+			a = vertex[0][i];
+			aVal = vals[i][j][k];
+			b = vertex[0][i + 1];
+			bVal = vals[i + 1][j][k];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(intersection);
+			triangleVertices.push_back(y);
+			triangleVertices.push_back(z);
+			break;
+		case 1:
+			x = vertex[0][i + 1];
+			y = vertex[1][j];
+
+			a = vertex[2][k];
+			aVal = vals[i + 1][j][k];
+			b = vertex[2][k + 1];
+			bVal = vals[i + 1][j][k + 1];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(x);
+			triangleVertices.push_back(y);
+			triangleVertices.push_back(intersection);
+			break;
+		case 2:
+			y = vertex[1][j];
+			z = vertex[2][k + 1];
+
+			a = vertex[0][i];
+			aVal = vals[i][j][k + 1];
+			b = vertex[0][i + 1];
+			bVal = vals[i + 1][j][k + 1];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(intersection);
+			triangleVertices.push_back(y);
+			triangleVertices.push_back(z);
+			break;
+		case 3:
+			x = vertex[0][i];
+			y = vertex[1][j];
+
+			a = vertex[2][k];
+			aVal = vals[i][j][k];
+			b = vertex[2][k + 1];
+			bVal = vals[i][j][k + 1];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(x);
+			triangleVertices.push_back(y);
+			triangleVertices.push_back(intersection);
+			break;
+		case 4:
+			y = vertex[1][j + 1];
+			z = vertex[2][k];
+
+			a = vertex[0][i];
+			aVal = vals[i][j + 1][k];
+			b = vertex[0][i + 1];
+			bVal = vals[i + 1][j + 1][k];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(intersection);
+			triangleVertices.push_back(y);
+			triangleVertices.push_back(z);
+			break;
+		case 5:
+			x = vertex[0][i + 1];
+			y = vertex[1][j + 1];
+
+			a = vertex[2][k];
+			aVal = vals[i + 1][j + 1][k];
+			b = vertex[2][k + 1];
+			bVal = vals[i + 1][j + 1][k + 1];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(x);
+			triangleVertices.push_back(y);
+			triangleVertices.push_back(intersection);
+			break;
+		case 6:
+			y = vertex[1][j + 1];
+			z = vertex[2][k + 1];
+
+			a = vertex[0][i];
+			aVal = vals[i][j + 1][k + 1];
+			b = vertex[0][i + 1];
+			bVal = vals[i + 1][j + 1][k + 1];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(intersection);
+			triangleVertices.push_back(y);
+			triangleVertices.push_back(z);
+			break;
+		case 7:
+			x = vertex[0][i];
+			y = vertex[1][j + 1];
+
+			a = vertex[2][k];
+			aVal = vals[i][j + 1][k];
+			b = vertex[2][k + 1];
+			bVal = vals[i][j + 1][k + 1];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(x);
+			triangleVertices.push_back(y);
+			triangleVertices.push_back(intersection);
+			break;
+		case 8:
+			x = vertex[0][i];
+			z = vertex[2][k];
+
+			a = vertex[1][j];
+			aVal = vals[i][j][k];
+			b = vertex[1][j + 1];
+			bVal = vals[i][j + 1][k];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(x);
+			triangleVertices.push_back(intersection);
+			triangleVertices.push_back(z);
+			break;
+		case 9:
+			x = vertex[0][i + 1];
+			z = vertex[2][k];
+
+			a = vertex[1][j];
+			aVal = vals[i + 1][j][k];
+			b = vertex[1][j + 1];
+			bVal = vals[i + 1][j + 1][k];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(x);
+			triangleVertices.push_back(intersection);
+			triangleVertices.push_back(z);
+			break;
+		case 10:
+			x = vertex[0][i + 1];
+			z = vertex[2][k + 1];
+
+			a = vertex[1][j];
+			aVal = vals[i + 1][j][k + 1];
+			b = vertex[1][j + 1];
+			bVal = vals[i + 1][j + 1][k + 1];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(x);
+			triangleVertices.push_back(intersection);
+			triangleVertices.push_back(z);
+			break;
+		case 11:
+			x = vertex[0][i];
+			z = vertex[2][k + 1];
+
+			a = vertex[1][j];
+			aVal = vals[i][j][k + 1];
+			b = vertex[1][j + 1];
+			bVal = vals[i][j + 1][k + 1];
+			intersection = interpolate(a, aVal, b, bVal);
+
+			triangleVertices.push_back(x);
+			triangleVertices.push_back(intersection);
+			triangleVertices.push_back(z);
+			break;
+		}
+	}
+
+	return triangleVertices;
+}
+
+GLfloat interpolate(GLfloat a, GLfloat aVal, GLfloat b, GLfloat bVal){
+	return a + ((isovalue - aVal) * (b - a) / (bVal - aVal));
 }
