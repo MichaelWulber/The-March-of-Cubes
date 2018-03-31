@@ -135,7 +135,7 @@ const GLfloat isovalue = 0.5f;		// In this case, isovalue = radius;
 
 
 bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius) {
-	return (x * x + y * y + z * z < radius);
+	return (x * x + y * y + z * z <= radius);
 }
 
 GLfloat sphereImplicitFunction(GLfloat x, GLfloat y, GLfloat z){
@@ -155,7 +155,7 @@ std::vector<GLfloat> genSphereMesh() {
 
 //	const GLfloat radius = 0.5f;
 
-	const GLint dim = 10; // number of vertices on bounding box edge
+	const GLint dim = 5; // number of vertices on bounding box edge
 	bool vertices[dim][dim][dim];
 
 
@@ -163,7 +163,7 @@ std::vector<GLfloat> genSphereMesh() {
 // vertexCoord[0][] = x's, vertexCoord[1][] = y's, vertex Coord[2][] = z's
 	GLfloat* vertexCoord[3] = {new GLfloat[dim], new GLfloat[dim], new GLfloat[dim]};
 	for (GLint i = 0; i < dim; ++i) {
-		a = ((GLfloat)i / (GLfloat)dim);
+		a = ((GLfloat)i / ((GLfloat)dim - 1));
 		x = maxX * a + minX * (1.0f - a);
 		y = maxY * a + minY * (1.0f - a);
 		z = maxZ * a + minZ * (1.0f - a);
