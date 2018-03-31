@@ -68,13 +68,46 @@ int main() {
 	Shader ourShader("core.vert", "core.frag");
 
 	// Create Cube Vertices
-	std::vector<GLfloat> vec = genSphereMesh();
+	std::vector<GLfloat> vertices = genSphereMesh();
+	std::vector<GLfloat> vBC(vertices.size(), 0);
+	std::vector<GLfloat> vertexData(vertices.size() * 2, 0);
 
-	//for (int i = 0; i < vec.size() / 3; ++i) {
-	//	for (int j = 0; j < 3; ++j) {
-	//		std::cout << vertices[i + j] << ", ";
-	//	}
-	//	std::cout << std::endl;
+	// fill vBC
+	std::cout << "size: " << vertices.size() / 9 << std::endl;
+	for (int i = 0; i < vertices.size(); i += 9) {
+		vBC[i] = 1.0f;
+		vBC[i + 1] = 0.0f;
+		vBC[i + 2] = 0.0f;
+
+		vBC[i + 3] = 0.0f;
+		vBC[i + 4] = 1.0f;
+		vBC[i + 5] = 0.0f;
+
+		vBC[i + 6] = 0.0f;
+		vBC[i + 7] = 0.0f;
+		vBC[i + 8] = 1.0f;
+	}
+
+	//for (int i = 0; i < vBC.size(); ++i) {
+	//	std::cout << vBC[i] << " ";
+	//}
+
+	// fill vertex data
+	int count = 0;
+	for (int i = 0; i < vertices.size() * 2; i += 6) {
+		vertexData[i] = vertices[count];
+		vertexData[i + 1] = vertices[count + 1];
+		vertexData[i + 2] = vertices[count + 2];
+
+		vertexData[i + 3] = vBC[count];
+		vertexData[i + 4] = vBC[count + 1];
+		vertexData[i + 5] = vBC[count + 2];
+		std::cout << i << std::endl;
+		count += 3;
+	}
+
+	//for (int i = 0; i < vertexData.size(); ++i) {
+	//	std::cout << vertexData[i] << " ";
 	//}
 
 	GLuint VBO, VAO;
@@ -85,16 +118,18 @@ int main() {
 
 	// bind vertex buffer
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vec.size() * sizeof(GLfloat), &vec[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)0);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);
 
 	glm::mat4 projection;
 	projection = glm::perspective(glm::radians(45.0f), (GLfloat)(screenWidth) / (GLfloat)(screenHeight), 0.1f, 1000.0f);
-
 	// GAME LOOP
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -118,7 +153,7 @@ int main() {
 		glUniformMatrix4fv(MVPLoc, 1, GL_FALSE, glm::value_ptr(MVP));
 
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, vec.size() / 3);
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
