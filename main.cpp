@@ -17,6 +17,11 @@
 bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius);
 GLfloat sphereImplicitFunction(GLfloat x, GLfloat y, GLfloat z);
 std::vector<GLfloat> genSphereMesh();
+
+bool isInsideTorus(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a);
+GLfloat torusImplicitFunction(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a);
+std::vector<GLfloat> genTorusMesh();
+
 int edgeListIndex(const bool arr[8]);
 std::vector<GLfloat> findVertices(int i, int j, int k, int index, GLfloat* vertex[3], GLfloat*** vals);
 GLfloat interpolate(GLfloat a, GLfloat aVal, GLfloat b, GLfloat bVal);
@@ -68,7 +73,7 @@ int main() {
 	Shader ourShader("core.vert", "core.frag");
 
 	// Create Cube Vertices
-	std::vector<GLfloat> vertices = genSphereMesh();
+	std::vector<GLfloat> vertices = genTorusMesh();
 	std::vector<GLfloat> vBC(vertices.size(), 0);
 	std::vector<GLfloat> vertexData(vertices.size() * 2, 0);
 
@@ -88,9 +93,6 @@ int main() {
 		vBC[i + 8] = 1.0f;
 	}
 
-	//for (int i = 0; i < vBC.size(); ++i) {
-	//	std::cout << vBC[i] << " ";
-	//}
 
 	// fill vertex data
 	int count = 0;
@@ -102,13 +104,8 @@ int main() {
 		vertexData[i + 3] = vBC[count];
 		vertexData[i + 4] = vBC[count + 1];
 		vertexData[i + 5] = vBC[count + 2];
-		std::cout << i << std::endl;
 		count += 3;
 	}
-
-	//for (int i = 0; i < vertexData.size(); ++i) {
-	//	std::cout << vertexData[i] << " ";
-	//}
 
 	GLuint VBO, VAO;
 	glGenVertexArrays(1, &VAO);
@@ -141,7 +138,7 @@ int main() {
 
 		// set up MVP matrix
 		glm::mat4 model(1.0f);
-		model = glm::rotate(model, (GLfloat)glfwGetTime() * -1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, (GLfloat)glfwGetTime() * -1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 		glm::mat4 view = glm::lookAt(
 			glm::vec3(3, 3, 3), // Camera is at (4,3,3), in World Space
 			glm::vec3(0, 0, 0), // and looks at the origin
@@ -166,7 +163,7 @@ int main() {
 	return EXIT_SUCCESS;
 }
 
-const GLfloat isovalue = 0.5f;		// In this case, isovalue = radius;
+GLfloat isovalue = 0.5f;		// In this case, isovalue = radius;
 
 
 bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius) {
@@ -188,9 +185,9 @@ std::vector<GLfloat> genSphereMesh() {
 	GLfloat x, y, z, a;
 	bool byteArray[8];
 
-//	const GLfloat radius = 0.5f;
+	isovalue = 0.5f;
 
-	const GLint dim = 5; // number of vertices on bounding box edge
+	const GLint dim = 25; // number of vertices on bounding box edge
 	bool vertices[dim][dim][dim];
 
 
@@ -206,7 +203,6 @@ std::vector<GLfloat> genSphereMesh() {
 		vertexCoord[1][i] = y;
 		vertexCoord[2][i] = z;
 	}
-	std::cout << "created vertices" << std::endl;
 
 // vertices stores 0 or 1 depending on whether vertex is inside sphere or not
 // vertexVals stores the actual value from the implicit function
@@ -226,16 +222,7 @@ std::vector<GLfloat> genSphereMesh() {
 			}
 		}
 	}
-	std::cout << "created bitgrid" << std::endl;
 
-	// --- TEST ---
-	for (int i = 0; i < dim; ++i) {
-		for (int j = 0; j < dim; ++j) {
-			std::cout << vertices[i][j][dim / 2] << ", ";
-		}
-		std::cout << std::endl;
-	}
-	// --- TEST ---
 
 // Go through every cube and check vertices;
 // triangleVertices stores vertices of facets as {x0, y0, z0, x1, y1, z1, ..., xn, yn, zn}
@@ -466,4 +453,95 @@ std::vector<GLfloat> findVertices(int i, int j, int k, int index,
 
 GLfloat interpolate(GLfloat a, GLfloat aVal, GLfloat b, GLfloat bVal){
 	return a + ((isovalue - aVal) * (b - a) / (bVal - aVal));
+}
+
+bool isInsideTorus(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a) {
+	return ((x*x + y*y + z*z + R*R - a*a) * (x*x + y*y + z*z + R*R - a*a) - 4 * R*R*(x*x + y*y) < 0);
+}
+
+GLfloat torusImplicitFunction(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a) {
+	return (x*x + y*y + z*z + R*R - a*a) * (x*x + y*y + z*z + R*R - a*a) - 4 * R*R*(x*x + y*y);
+}
+
+std::vector<GLfloat> genTorusMesh() {
+	std::cout << "generating mesh..." << std::endl;
+	GLfloat minX = -1.0f;
+	GLfloat minY = -1.0f;
+	GLfloat minZ = -1.0f;
+	GLfloat maxX = 1.0f;
+	GLfloat maxY = 1.0f;
+	GLfloat maxZ = 1.0f;
+	GLfloat x, y, z, a;
+	bool byteArray[8];
+
+	const GLfloat r1 = 0.5f;
+	const GLfloat r2 = 0.1f;
+
+	const GLint dim = 50; // number of vertices on bounding box edge
+	bool vertices[dim][dim][dim];
+
+	isovalue = 0.0f;
+
+	GLfloat* vertexCoord[3] = { new GLfloat[dim], new GLfloat[dim], new GLfloat[dim] };
+	for (GLint i = 0; i < dim; ++i) {
+		a = ((GLfloat)i / ((GLfloat)dim - 1));
+		x = maxX * a + minX * (1.0f - a);
+		y = maxY * a + minY * (1.0f - a);
+		z = maxZ * a + minZ * (1.0f - a);
+		vertexCoord[0][i] = x;
+		vertexCoord[1][i] = y;
+		vertexCoord[2][i] = z;
+	}
+
+	// vertices stores 0 or 1 depending on whether vertex is inside sphere or not
+	// vertexVals stores the actual value from the implicit function
+	GLfloat*** vertexVals = new GLfloat**[dim];
+	for (GLint i = 0; i < dim; ++i) {
+		vertexVals[i] = new GLfloat*[dim];
+
+		for (GLint j = 0; j < dim; ++j) {
+			vertexVals[i][j] = new GLfloat[dim];
+
+			for (GLint k = 0; k < dim; ++k) {
+				x = vertexCoord[0][i];
+				y = vertexCoord[1][j];
+				z = vertexCoord[2][k];
+				vertices[i][j][k] = isInsideTorus(x, y, z, r1, r2);
+				vertexVals[i][j][k] = torusImplicitFunction(x, y, z, r1, r2);
+			}
+		}
+	}
+
+	//for (int i = 0; i < dim; ++i) {
+	//	for (int j = 0; j < dim; ++j) {
+	//		std::cout << vertices[i][j][dim / 2] << " ";
+	//	}
+	//	std::cout << std::endl;
+	//}
+
+	// Go through every cube and check vertices;
+	// triangleVertices stores vertices of facets as {x0, y0, z0, x1, y1, z1, ..., xn, yn, zn}
+	std::vector<GLfloat> triangleVertices;
+	std::vector<GLfloat> temp;
+	for (GLint i = 0; i < dim - 1; ++i) {
+		for (GLint j = 0; j < dim - 1; ++j) {
+			for (GLint k = 0; k < dim - 1; ++k) {
+				byteArray[0] = vertices[i][j][k];
+				byteArray[1] = vertices[i + 1][j][k];
+				byteArray[2] = vertices[i + 1][j][k + 1];
+				byteArray[3] = vertices[i][j][k + 1];
+				byteArray[4] = vertices[i][j + 1][k];
+				byteArray[5] = vertices[i + 1][j + 1][k];
+				byteArray[6] = vertices[i + 1][j + 1][k + 1];
+				byteArray[7] = vertices[i][j + 1][k + 1];
+				int index = edgeListIndex(byteArray);
+
+				temp = findVertices(i, j, k, index, vertexCoord, vertexVals);
+				triangleVertices.insert(triangleVertices.end(), temp.begin(), temp.end());
+			}
+		}
+	}
+	std::cout << "mesh complete" << std::endl;
+
+	return triangleVertices;
 }
