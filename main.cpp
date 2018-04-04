@@ -13,6 +13,7 @@
 
 #include "Shader.h"
 #include "LookUpTable.h"
+#include "Mesh.h"
 
 bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius);
 GLfloat sphereImplicitFunction(GLfloat x, GLfloat y, GLfloat z);
@@ -26,8 +27,15 @@ int edgeListIndex(const bool arr[8]);
 std::vector<GLfloat> findVertices(int i, int j, int k, int index, GLfloat* vertex[3], GLfloat*** vals);
 GLfloat interpolate(GLfloat a, GLfloat aVal, GLfloat b, GLfloat bVal);
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+
 const GLint WIDTH = 1200, HEIGHT = 1200;
 int screenWidth, screenHeight;
+
+// Mesh Objects
+Mesh sphere;
+Mesh torus;
+Mesh current;
 
 int main() {
 	glfwInit();
@@ -55,6 +63,7 @@ int main() {
 
 	// set the current context to the window we just created
 	glfwMakeContextCurrent(window);
+	glfwSetKeyCallback(window, key_callback);
 
 	// use modern approach to obtain function pointers
 	glewExperimental = GL_TRUE;
@@ -72,61 +81,33 @@ int main() {
 
 	Shader ourShader("core.vert", "core.frag");
 
-	// Create Cube Vertices
-	std::vector<GLfloat> vertices = genTorusMesh();
-	std::vector<GLfloat> vBC(vertices.size(), 0);
-	std::vector<GLfloat> vertexData(vertices.size() * 2, 0);
+	// create torus mesh
+	std::vector<GLfloat> torusVertices = genTorusMesh();
+	torus = Mesh(0.1f, 0.3f, 0.8f, 0.9f, 0.9f, 1.0f);
+	torus.setVPositions(torusVertices);
+	torus.genBuffer();
 
-	// fill vBC
-	std::cout << "size: " << vertices.size() / 9 << std::endl;
-	for (int i = 0; i < vertices.size(); i += 9) {
-		vBC[i] = 1.0f;
-		vBC[i + 1] = 0.0f;
-		vBC[i + 2] = 0.0f;
+	// create sphere mesh
+	std::vector<GLfloat> sphereVertices = genSphereMesh();
+	sphere = Mesh(0.1f, 0.3f, 0.8f, 0.9f, 0.9f, 1.0f);
+	sphere.setVPositions(sphereVertices);
+	sphere.genBuffer();
 
-		vBC[i + 3] = 0.0f;
-		vBC[i + 4] = 1.0f;
-		vBC[i + 5] = 0.0f;
+	// set current mesh
+	current = torus;
 
-		vBC[i + 6] = 0.0f;
-		vBC[i + 7] = 0.0f;
-		vBC[i + 8] = 1.0f;
-	}
-
-
-	// fill vertex data
-	int count = 0;
-	for (int i = 0; i < vertices.size() * 2; i += 6) {
-		vertexData[i] = vertices[count];
-		vertexData[i + 1] = vertices[count + 1];
-		vertexData[i + 2] = vertices[count + 2];
-
-		vertexData[i + 3] = vBC[count];
-		vertexData[i + 4] = vBC[count + 1];
-		vertexData[i + 5] = vBC[count + 2];
-		count += 3;
-	}
-
+	// create openGL buffer and attribute objects
 	GLuint VBO, VAO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
-
 	glBindVertexArray(VAO);
-
-	// bind vertex buffer
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), &vertexData[0], GL_STATIC_DRAW);
+	current.bindBuffer();
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
-
-	glBindVertexArray(0);
-
+	// create projection transformation
 	glm::mat4 projection;
 	projection = glm::perspective(glm::radians(45.0f), (GLfloat)(screenWidth) / (GLfloat)(screenHeight), 0.1f, 1000.0f);
+
 	// GAME LOOP
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -140,7 +121,7 @@ int main() {
 		glm::mat4 model(1.0f);
 		model = glm::rotate(model, (GLfloat)glfwGetTime() * -1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 		glm::mat4 view = glm::lookAt(
-			glm::vec3(3, 3, 3), // Camera is at (4,3,3), in World Space
+			glm::vec3(3, 3, 3), // Camera is at (3,3,3), in World Space
 			glm::vec3(0, 0, 0), // and looks at the origin
 			glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 			);
@@ -150,7 +131,7 @@ int main() {
 		glUniformMatrix4fv(MVPLoc, 1, GL_FALSE, glm::value_ptr(MVP));
 
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
+		glDrawArrays(GL_TRIANGLES, 0, current.vPositions.size() / 3);
 		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
@@ -187,7 +168,7 @@ std::vector<GLfloat> genSphereMesh() {
 
 	isovalue = 0.5f;
 
-	const GLint dim = 25; // number of vertices on bounding box edge
+	const GLint dim = 5; // number of vertices on bounding box edge
 	bool vertices[dim][dim][dim];
 
 
@@ -544,4 +525,18 @@ std::vector<GLfloat> genTorusMesh() {
 	std::cout << "mesh complete" << std::endl;
 
 	return triangleVertices;
+}
+
+// handle input
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+		current = sphere;
+		current.bindBuffer();
+	}
+
+	else if (key == GLFW_KEY_T && action == GLFW_PRESS) {
+		current = torus;
+		current.bindBuffer();
+	}
 }
