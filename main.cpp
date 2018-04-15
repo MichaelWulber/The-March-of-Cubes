@@ -553,12 +553,12 @@ GLfloat genusImplicitFunction(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloa
 
 std::vector<GLfloat> genGenusMesh() {
 	std::cout << "generating mesh..." << std::endl;
-	GLfloat minX = -1.0f;
-	GLfloat minY = -1.0f;
-	GLfloat minZ = -1.0f;
-	GLfloat maxX = 1.0f;
-	GLfloat maxY = 1.0f;
-	GLfloat maxZ = 1.0f;
+	GLfloat minX = -2.0f;
+	GLfloat minY = -2.0f;
+	GLfloat minZ = -2.0f;
+	GLfloat maxX = 2.0f;
+	GLfloat maxY = 2.0f;
+	GLfloat maxZ = 2.0f;
 	GLfloat x, y, z, a;
 	bool byteArray[8];
 
