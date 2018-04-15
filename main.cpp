@@ -123,7 +123,7 @@ int main() {
 		glm::mat4 model(1.0f);
 		model = glm::rotate(model, (GLfloat)glfwGetTime() * -1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 		glm::mat4 view = glm::lookAt(
-			glm::vec3(3, 3, 3), // Camera is at (3,3,3), in World Space
+			glm::vec3(2, 2, 2), // Camera is at (3,3,3), in World Space
 			glm::vec3(0, 0, 0), // and looks at the origin
 			glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 			);

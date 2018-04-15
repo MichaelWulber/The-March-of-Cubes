@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include <cmath>
 
 Mesh::Mesh() : vPositions(0, 0.f), vFaceColors(0, 0.f), vEdgeColors(0, 0.f), faceColor(3, 0.f), edgeColor(3, 0.f), vBuffer(0, 0.f), vNormals(3, 0.f){}
 
@@ -46,9 +47,11 @@ std::vector<GLfloat> Mesh::calculateVNormals(GLfloat Ax, GLfloat Ay, GLfloat Az,
     GLfloat normalY = (Uz*Vx) - (Ux*Vz);
     GLfloat normalZ = (Ux*Vy) - (Uy*Vx);
 
-    normals[0]= normalX;
-    normals[1]= normalY;
-    normals[2]= normalZ;
+    GLfloat mag = sqrt(normalX*normalX + normalY*normalY + normalZ*normalZ);
+
+    normals[0]= normalX / mag;
+    normals[1]= normalY / mag;
+    normals[2]= normalZ / mag;
 
     return normals;
 }
