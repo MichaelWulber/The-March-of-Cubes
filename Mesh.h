@@ -2,7 +2,8 @@
 #define MESH_H
 
 #include <vector>
-#include <Gl/glew.h>
+#define GLEW_STATIC
+#include <GL/glew.h>
 
 class Mesh {
 public:

@@ -55,6 +55,7 @@ std::vector<GLfloat> Mesh::calculateVNormals(GLfloat Ax, GLfloat Ay, GLfloat Az,
 
 void Mesh::genVNormals(){
     std::vector<GLfloat> normal(3, 0.f);
+    std::vector<GLfloat> vNormals(vPositions.size(), 0.f);
 
     for( int i = 0; i < vPositions.size(); i+=9){
         normal = calculateVNormals(vPositions[i],
@@ -79,7 +80,7 @@ void Mesh::genVNormals(){
         vNormals[i+7] = normal[1];
         vNormals[i+8] = normal[2];
     }
-
+    this->vNormals = vNormals;
 }
 
 void Mesh::addTriangle(std::vector<GLfloat> vPos) {
@@ -87,12 +88,12 @@ void Mesh::addTriangle(std::vector<GLfloat> vPos) {
 }
 
 void Mesh::genBuffer() {
-	std::vector<GLfloat> buffer(vPositions.size() * 4, 0.0f);
+	std::vector<GLfloat> buffer(vPositions.size() * 5, 0.0f);
 	std::vector<GLfloat> vBC;
 	vBC = genVBC();
 
 	int count = 0;
-	for (int i = 0; i < vPositions.size() * 4; i += 12) {
+	for (int i = 0; i < vPositions.size() * 5; i += 15) {
 		// vertex position
 		buffer[i] = vPositions[count];
 		buffer[i + 1] = vPositions[count + 1];
@@ -114,9 +115,9 @@ void Mesh::genBuffer() {
 		buffer[i + 11] = this->edgeColor[2];
 
         // Add facial normal attribute
-        buffer[i +12] = this->vNormals[count];
-        buffer[i +13] = this->vNormals[count+1];
-        buffer[i +14] = this->vNormals[count+2];
+        buffer[i + 12] = this->vNormals[count];
+        buffer[i + 13] = this->vNormals[count+1];
+        buffer[i + 14] = this->vNormals[count+2];
         count += 3;
 	}
 	this->vBuffer = buffer;

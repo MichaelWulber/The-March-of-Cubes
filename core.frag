@@ -22,7 +22,7 @@ void main() {
 
 	else {
 		vec3 lightDir = vec3(10.0, 10.0, 10.0); 
-		float diff = max(dot(norm, lightDir), 0.0);
+		float diff = max(dot(surf_norm, lightDir), 0.0);
 		vec3 diffuse = diff * vec3(1.0, 1.0, 1.0);
 		color = vec4(diffuse * f_col, 1.0);
 	}
