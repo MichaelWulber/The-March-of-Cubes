@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#define GLEW_STATIC
+//#define GLEW_STATIC
 #include <Gl/glew.h>
 
 #include <GLFW/glfw3.h>
@@ -85,12 +85,14 @@ int main() {
 	std::vector<GLfloat> torusVertices = genTorusMesh();
 	torus = Mesh(0.1f, 0.3f, 0.8f, 0.9f, 0.9f, 1.0f);
 	torus.setVPositions(torusVertices);
+	torus.genVNormals();
 	torus.genBuffer();
 
 	// create sphere mesh
 	std::vector<GLfloat> sphereVertices = genSphereMesh();
 	sphere = Mesh(0.1f, 0.3f, 0.8f, 0.9f, 0.9f, 1.0f);
 	sphere.setVPositions(sphereVertices);
+	sphere.genVNormals();
 	sphere.genBuffer();
 
 	// set current mesh
