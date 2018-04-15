@@ -15,6 +15,9 @@
 #include "LookUpTable.h"
 #include "Mesh.h"
 
+#include "trefoilFunc.h"
+
+
 bool isInsideSphere(GLfloat x, GLfloat y, GLfloat z, GLfloat radius);
 GLfloat sphereImplicitFunction(GLfloat x, GLfloat y, GLfloat z);
 std::vector<GLfloat> genSphereMesh();
@@ -26,6 +29,10 @@ std::vector<GLfloat> genTorusMesh();
 bool isInsideGenus(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a);
 GLfloat genusImplicitFunction(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a);
 std::vector<GLfloat> genGenusMesh();
+
+bool isInsideTrefoil(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a);
+GLfloat trefoilImplicitFunction(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a);
+std::vector<GLfloat> genTrefoilMesh();
 
 int edgeListIndex(const bool arr[8]);
 std::vector<GLfloat> findVertices(int i, int j, int k, int index, GLfloat* vertex[3], GLfloat*** vals);
@@ -40,6 +47,7 @@ int screenWidth, screenHeight;
 Mesh sphere;
 Mesh torus;
 Mesh genus;
+Mesh trefoil;
 Mesh current;
 
 int main() {
@@ -100,11 +108,19 @@ int main() {
 	sphere.genVNormals();
 	sphere.genBuffer();
 
+	// create Genus 2 mesh
 	std::vector<GLfloat> genusVertices = genGenusMesh();
 	genus = Mesh(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
 	genus.setVPositions(genusVertices);
 	genus.genVNormals();
 	genus.genBuffer();
+
+	// create trefoil mesh
+	std::vector<GLfloat> trefoilVertices = genTrefoilMesh();
+	trefoil = Mesh(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+	trefoil.setVPositions(trefoilVertices);
+	trefoil.genVNormals();
+	trefoil.genBuffer();
 
 	// set current mesh
 	current = torus;
@@ -634,6 +650,115 @@ std::vector<GLfloat> genGenusMesh() {
 	return triangleVertices;
 }
 
+GLfloat a = 2;
+GLfloat b = 0.2f;
+
+bool isInsideTrefoil(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a) {
+return ((-8*(x*x + y*y)*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b) + 4*a*a*(2*(x*x + y*y)*(x*x + y*y)
+		- (x*x*x - 3*x*y*y)*(x*x + y*y + 1)) + 8*a*a*(3*x*x*y - y*y*y)*z + 4*a*a*(x*x*x - 3*x*y*y)*z*z)
+		* (-8*(x*x + y*y)*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b) + 4*a*a*(2*(x*x + y*y)*(x*x + y*y)
+				- (x*x*x - 3*x*y*y)*(x*x + y*y + 1)) + 8*a*a*(3*x*x*y - y*y*y)*z + 4*a*a*(x*x*x - 3*x*y*y)*z*z)
+		- (x*x + y*y)*(2*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b)*(x*x + y*y + 1 + z*z + a*a - b*b) + 8*(x*x + y*y)*(x*x + y*y)
+				+ 4*a*a*(2*(x*x*x - 3*x*y*y) - (x*x + y*y)*(x*x + y*y + 1)) - 8*a*a*(3*x*x*y - y*y*y)*z - 4*(x*x + y*y)*a*a*z*z)
+				* (2*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b)*(x*x + y*y + 1 + z*z + a*a - b*b) + 8*(x*x + y*y)*(x*x + y*y)
+						+ 4*a*a*(2*(x*x*x - 3*x*y*y) - (x*x + y*y)*(x*x + y*y + 1)) - 8*a*a*(3*x*x*y - y*y*y)*z - 4*(x*x + y*y)*a*a*z*z) <= 0);
+}
+
+GLfloat trefoilImplicitFunction(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a) {
+
+return (-8*(x*x + y*y)*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b) + 4*a*a*(2*(x*x + y*y)*(x*x + y*y)
+		- (x*x*x - 3*x*y*y)*(x*x + y*y + 1)) + 8*a*a*(3*x*x*y - y*y*y)*z + 4*a*a*(x*x*x - 3*x*y*y)*z*z)
+		* (-8*(x*x + y*y)*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b) + 4*a*a*(2*(x*x + y*y)*(x*x + y*y)
+				- (x*x*x - 3*x*y*y)*(x*x + y*y + 1)) + 8*a*a*(3*x*x*y - y*y*y)*z + 4*a*a*(x*x*x - 3*x*y*y)*z*z)
+		- (x*x + y*y)*(2*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b)*(x*x + y*y + 1 + z*z + a*a - b*b) + 8*(x*x + y*y)*(x*x + y*y)
+				+ 4*a*a*(2*(x*x*x - 3*x*y*y) - (x*x + y*y)*(x*x + y*y + 1)) - 8*a*a*(3*x*x*y - y*y*y)*z - 4*(x*x + y*y)*a*a*z*z)
+				* (2*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b)*(x*x + y*y + 1 + z*z + a*a - b*b) + 8*(x*x + y*y)*(x*x + y*y)
+						+ 4*a*a*(2*(x*x*x - 3*x*y*y) - (x*x + y*y)*(x*x + y*y + 1)) - 8*a*a*(3*x*x*y - y*y*y)*z - 4*(x*x + y*y)*a*a*z*z);
+}
+
+std::vector<GLfloat> genTrefoilMesh() {
+std::cout << "generating mesh..." << std::endl;
+GLfloat minX = -2.0f;
+GLfloat minY = -2.0f;
+GLfloat minZ = -2.0f;
+GLfloat maxX = 2.0f;
+GLfloat maxY = 2.0f;
+GLfloat maxZ = 2.0f;
+GLfloat x, y, z, a;
+bool byteArray[8];
+
+const GLfloat r1 = 0.5f;
+const GLfloat r2 = 0.3f;
+
+const GLint dim = 100; // number of vertices on bounding box edge
+bool vertices[dim][dim][dim];
+
+isovalue = 0.0f;
+
+GLfloat* vertexCoord[3] = { new GLfloat[dim], new GLfloat[dim], new GLfloat[dim] };
+for (GLint i = 0; i < dim; ++i) {
+	a = ((GLfloat)i / ((GLfloat)dim - 1));
+	x = maxX * a + minX * (1.0f - a);
+	y = maxY * a + minY * (1.0f - a);
+	z = maxZ * a + minZ * (1.0f - a);
+	vertexCoord[0][i] = x;
+	vertexCoord[1][i] = y;
+	vertexCoord[2][i] = z;
+}
+
+// vertices stores 0 or 1 depending on whether vertex is inside sphere or not
+// vertexVals stores the actual value from the implicit function
+GLfloat*** vertexVals = new GLfloat**[dim];
+for (GLint i = 0; i < dim; ++i) {
+	vertexVals[i] = new GLfloat*[dim];
+
+	for (GLint j = 0; j < dim; ++j) {
+		vertexVals[i][j] = new GLfloat[dim];
+
+		for (GLint k = 0; k < dim; ++k) {
+			x = vertexCoord[0][i];
+			y = vertexCoord[1][j];
+			z = vertexCoord[2][k];
+			vertices[i][j][k] = isInsideTrefoil(x, y, z, r1, r2);
+			vertexVals[i][j][k] = trefoilImplicitFunction(x, y, z, r1, r2);
+		}
+	}
+}
+/*
+for (int i = 0; i < dim; ++i) {
+	for (int j = 0; j < dim; ++j) {
+		std::cout << vertices[i][j][dim / 2] << " ";
+	}
+	std::cout << std::endl;
+}
+*/
+// Go through every cube and check vertices;
+// triangleVertices stores vertices of facets as {x0, y0, z0, x1, y1, z1, ..., xn, yn, zn}
+std::vector<GLfloat> triangleVertices;
+std::vector<GLfloat> temp;
+for (GLint i = 0; i < dim - 1; ++i) {
+	for (GLint j = 0; j < dim - 1; ++j) {
+		for (GLint k = 0; k < dim - 1; ++k) {
+			byteArray[0] = vertices[i][j][k];
+			byteArray[1] = vertices[i + 1][j][k];
+			byteArray[2] = vertices[i + 1][j][k + 1];
+			byteArray[3] = vertices[i][j][k + 1];
+			byteArray[4] = vertices[i][j + 1][k];
+			byteArray[5] = vertices[i + 1][j + 1][k];
+			byteArray[6] = vertices[i + 1][j + 1][k + 1];
+			byteArray[7] = vertices[i][j + 1][k + 1];
+			int index = edgeListIndex(byteArray);
+
+			temp = findVertices(i, j, k, index, vertexCoord, vertexVals);
+			triangleVertices.insert(triangleVertices.end(), temp.begin(), temp.end());
+		}
+	}
+}
+std::cout << "mesh complete" << std::endl;
+
+return triangleVertices;
+}
+
 // handle input
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -649,6 +774,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	else if (key == GLFW_KEY_G && action == GLFW_PRESS) {
 		current = genus;
+		current.bindBuffer();
+	}
+
+	else if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+		current = trefoil;
 		current.bindBuffer();
 	}
 }
