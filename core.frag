@@ -3,27 +3,15 @@
 in vec3 vBC;
 in vec3 f_col;
 in vec3 e_col;
-in vec3 surf_norm;
+in vec4 surf_norm;
 
 out vec4 color;
 
 void main() {
-	if (vBC.x < 0.025) {
-		color = vec4(e_col, 1.0);
-	} 
-
-	else if (vBC.y < 0.025) {
-		color = vec4(e_col, 1.0);
-	}
-
-	else if (vBC.z < 0.025) {
-		color = vec4(e_col, 1.0);
-	}
-
-	else {
-		vec3 lightDir = vec3(10.0, 10.0, 10.0); 
-		float diff = max(dot(surf_norm, lightDir), 0.0);
-		vec3 diffuse = diff * vec3(1.0, 1.0, 1.0);
-		color = vec4(diffuse * f_col, 1.0);
-	}
+	vec4 lightDir = vec4(0.0, -1.0, 0.0, 1.0); 
+	float diff = 0.5 * max( dot( surf_norm, lightDir ), 0.0 );
+	vec4 diffuse = diff * vec4(1.0, 1.0, 1.0, 1.0);
+	vec4 ambient = 0.2 * vec4(f_col, 1.0);
+	vec4 temp = vec4(diffuse * f_col + ambient);
+	color = vec4(temp.x, temp.y, temp.z, 1.0);
 }

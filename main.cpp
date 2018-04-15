@@ -2,7 +2,7 @@
 #include <vector>
 
 #define GLEW_STATIC
-#include <GL/glew.h>
+#include <Gl/glew.h>
 
 #include <GLFW/glfw3.h>
 
@@ -83,14 +83,14 @@ int main() {
 
 	// create torus mesh
 	std::vector<GLfloat> torusVertices = genTorusMesh();
-	torus = Mesh(0.1f, 0.3f, 0.8f, 0.9f, 0.9f, 1.0f);
+	torus = Mesh(1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
 	torus.setVPositions(torusVertices);
 	torus.genVNormals();
 	torus.genBuffer();
 
 	// create sphere mesh
 	std::vector<GLfloat> sphereVertices = genSphereMesh();
-	sphere = Mesh(0.1f, 0.3f, 0.8f, 0.9f, 0.9f, 1.0f);
+	sphere = Mesh(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
 	sphere.setVPositions(sphereVertices);
 	sphere.genVNormals();
 	sphere.genBuffer();
@@ -123,7 +123,7 @@ int main() {
 		glm::mat4 model(1.0f);
 		model = glm::rotate(model, (GLfloat)glfwGetTime() * -1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 		glm::mat4 view = glm::lookAt(
-			glm::vec3(2, 2, 2), // Camera is at (3,3,3), in World Space
+			glm::vec3(3, 3, 3), // Camera is at (3,3,3), in World Space
 			glm::vec3(0, 0, 0), // and looks at the origin
 			glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 			);
@@ -131,6 +131,9 @@ int main() {
 
 		GLint MVPLoc = glGetUniformLocation(ourShader.Program, "MVP");
 		glUniformMatrix4fv(MVPLoc, 1, GL_FALSE, glm::value_ptr(MVP));
+
+		GLint modelLoc = glGetUniformLocation(ourShader.Program, "model");
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, current.vPositions.size() / 3);
@@ -170,7 +173,7 @@ std::vector<GLfloat> genSphereMesh() {
 
 	isovalue = 0.5f;
 
-	const GLint dim = 5; // number of vertices on bounding box edge
+	const GLint dim = 25; // number of vertices on bounding box edge
 	bool vertices[dim][dim][dim];
 
 
@@ -439,7 +442,7 @@ GLfloat interpolate(GLfloat a, GLfloat aVal, GLfloat b, GLfloat bVal){
 }
 
 bool isInsideTorus(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a) {
-	return ((x*x + y*y + z*z + R*R - a*a) * (x*x + y*y + z*z + R*R - a*a) - 4 * R*R*(x*x + y*y) < 0);
+	return ((x*x + y*y + z*z + R*R - a*a) * (x*x + y*y + z*z + R*R - a*a) - 4 * R*R*(x*x + y*y) <= 0);
 }
 
 GLfloat torusImplicitFunction(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a) {
@@ -458,7 +461,7 @@ std::vector<GLfloat> genTorusMesh() {
 	bool byteArray[8];
 
 	const GLfloat r1 = 0.5f;
-	const GLfloat r2 = 0.1f;
+	const GLfloat r2 = 0.3f;
 
 	const GLint dim = 50; // number of vertices on bounding box edge
 	bool vertices[dim][dim][dim];
