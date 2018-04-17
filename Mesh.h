@@ -9,11 +9,10 @@ class Mesh {
 public:
 	std::vector<GLfloat> vPositions;
 	std::vector<GLfloat> faceColor;
-	std::vector<GLfloat> edgeColor;
     std::vector<GLfloat> vNormals;
 
 	Mesh();
-	Mesh(GLfloat fR, GLfloat fG, GLfloat fB, GLfloat eR, GLfloat eG, GLfloat eB);
+	Mesh(GLfloat R, GLfloat G, GLfloat B);
 	Mesh(const Mesh &mesh);
 
 	void setVPositions(std::vector<GLfloat> vPos);
@@ -26,11 +25,7 @@ public:
 	void reset();
 
 private:
-	std::vector<GLfloat> vFaceColors;
-	std::vector<GLfloat> vEdgeColors;
 	std::vector<GLfloat> vBuffer;
-
-	std::vector<GLfloat> genVBC();
 };
 
 #endif
