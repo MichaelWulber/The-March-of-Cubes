@@ -2,7 +2,7 @@
 #include <vector>
 
 #define GLEW_STATIC
-#include <Gl/glew.h>
+#include <GL/glew.h>
 
 #include <GLFW/glfw3.h>
 
@@ -21,23 +21,11 @@
 #include "TrefoilFunc.h"
 
 
-bool isInsideTorus(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a);
-GLfloat torusImplicitFunction(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a);
-std::vector<GLfloat> genTorusMesh();
-
-//bool isInsideGenus(GLfloat x, GLfloat y, GLfloat z);
-//GLfloat genusImplicitFunction(GLfloat x, GLfloat y, GLfloat z);
-//std::vector<GLfloat> genGenusMesh();
-
-bool isInsideTrefoil(GLfloat x, GLfloat y, GLfloat z);
-GLfloat trefoilImplicitFunction(GLfloat x, GLfloat y);
-std::vector<GLfloat> genTrefoilMesh();
-
 int edgeListIndex(const bool arr[8]);
 std::vector<GLfloat> findVertices(int i, int j, int k, int index, GLfloat* vertex[3], GLfloat*** vals);
 GLfloat interpolate(GLfloat a, GLfloat aVal, GLfloat b, GLfloat bVal);
 
-std::vector<GLfloat> genMesh(ImplicitFunc* function, GLfloat cubeSize);
+std::vector<GLfloat> genMesh(ImplicitFunc* function, GLfloat cubeSize, GLint dim);
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
@@ -102,9 +90,8 @@ int main() {
 	Shader ourShader("core.vert", "core.frag");
 
 	// create sphere mesh
-	//std::vector<GLfloat> sphereVertices = genSphereMesh();
 	sphereFunc = new SphereFunc(1.0f);
-	std::vector<GLfloat> sphereVertices = genMesh(sphereFunc, 1.0f);
+	std::vector<GLfloat> sphereVertices = genMesh(sphereFunc, 1.0f, 50);
 	sphere = Mesh(0.0f, 1.0f, 1.0f);
 	sphere.setVPositions(sphereVertices);
 	sphere.genVNormals();
@@ -112,8 +99,7 @@ int main() {
 
 	// create torus mesh
 	torusFunc = new TorusFunc(0.5f, 0.3f);
-	//std::vector<GLfloat> torusVertices = genTorusMesh();
-	std::vector<GLfloat> torusVertices = genMesh(torusFunc, 1.0f);
+	std::vector<GLfloat> torusVertices = genMesh(torusFunc, 1.0f, 50);
 	torus = Mesh(1.0f, 1.0f, 1.0f);
 	torus.setVPositions(torusVertices);
 	torus.genVNormals();
@@ -121,18 +107,16 @@ int main() {
 
 
 	// create Genus 2 mesh
-//	std::vector<GLfloat> genusVertices = genGenusMesh();
 	genusFunc = new GenusFunc();
-	std::vector<GLfloat> genusVertices = genMesh(genusFunc, 2.0f);
+	std::vector<GLfloat> genusVertices = genMesh(genusFunc, 2.0f, 50);
 	genus = Mesh(0.0f, 1.0f, 1.0f);
 	genus.setVPositions(genusVertices);
 	genus.genVNormals();
 	genus.genBuffer();
 
 	// create trefoil mesh
-	//std::vector<GLfloat> trefoilVertices = genTrefoilMesh();
 	trefoilFunc = new TrefoilFunc(0.3f, 0.2f);
-	std::vector<GLfloat> trefoilVertices = genMesh(trefoilFunc, 2.0f);
+	std::vector<GLfloat> trefoilVertices = genMesh(trefoilFunc, 2.0f, 100);
 	trefoil = Mesh(0.0f, 1.0f, 1.0f);
 	trefoil.setVPositions(trefoilVertices);
 	trefoil.genVNormals();
@@ -194,8 +178,8 @@ int main() {
 }
 
 
-std::vector<GLfloat> genMesh(ImplicitFunc* function, GLfloat cubeSize) {
-	std::cout << "generating " << cubeSize << " mesh..." << std::endl;
+std::vector<GLfloat> genMesh(ImplicitFunc* function, GLfloat cubeSize, GLint dim) {
+	std::cout << "generating mesh..." << std::endl;
 	GLfloat minX = -cubeSize;
 	GLfloat minY = -cubeSize;
 	GLfloat minZ = -cubeSize;
@@ -206,7 +190,7 @@ std::vector<GLfloat> genMesh(ImplicitFunc* function, GLfloat cubeSize) {
 	bool byteArray[8];
 
 
-	const GLint dim = 50; // number of vertices on bounding box edge
+//	const GLint dim = 50; // number of vertices on bounding box edge
 	bool vertices[dim][dim][dim];
 
 
@@ -241,7 +225,6 @@ std::vector<GLfloat> genMesh(ImplicitFunc* function, GLfloat cubeSize) {
 			}
 		}
 	}
-
 
 // Go through every cube and check vertices;
 // triangleVertices stores vertices of facets as {x0, y0, z0, x1, y1, z1, ..., xn, yn, zn}
@@ -472,286 +455,6 @@ std::vector<GLfloat> findVertices(int i, int j, int k, int index,
 
 GLfloat interpolate(GLfloat a, GLfloat aVal, GLfloat b, GLfloat bVal){
 	return a + ((-aVal) * (b - a) / (bVal - aVal));
-}
-
-bool isInsideTorus(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a) {
-	return ((x*x + y*y + z*z + R*R - a*a) * (x*x + y*y + z*z + R*R - a*a) - 4 * R*R*(x*x + y*y) <= 0);
-}
-
-GLfloat torusImplicitFunction(GLfloat x, GLfloat y, GLfloat z, GLfloat R, GLfloat a) {
-	return (x*x + y*y + z*z + R*R - a*a) * (x*x + y*y + z*z + R*R - a*a) - 4 * R*R*(x*x + y*y);
-}
-
-std::vector<GLfloat> genTorusMesh() {
-	std::cout << "generating Torus mesh..." << std::endl;
-	GLfloat minX = -1.0f;
-	GLfloat minY = -1.0f;
-	GLfloat minZ = -1.0f;
-	GLfloat maxX = 1.0f;
-	GLfloat maxY = 1.0f;
-	GLfloat maxZ = 1.0f;
-	GLfloat x, y, z, a;
-	bool byteArray[8];
-
-	const GLfloat r1 = 0.5f;
-	const GLfloat r2 = 0.3f;
-
-	const GLint dim = 50; // number of vertices on bounding box edge
-	bool vertices[dim][dim][dim];
-
-	GLfloat* vertexCoord[3] = { new GLfloat[dim], new GLfloat[dim], new GLfloat[dim] };
-	for (GLint i = 0; i < dim; ++i) {
-		a = ((GLfloat)i / ((GLfloat)dim - 1));
-		x = maxX * a + minX * (1.0f - a);
-		y = maxY * a + minY * (1.0f - a);
-		z = maxZ * a + minZ * (1.0f - a);
-		vertexCoord[0][i] = x;
-		vertexCoord[1][i] = y;
-		vertexCoord[2][i] = z;
-	}
-
-	// vertices stores 0 or 1 depending on whether vertex is inside sphere or not
-	// vertexVals stores the actual value from the implicit function
-	GLfloat*** vertexVals = new GLfloat**[dim];
-	for (GLint i = 0; i < dim; ++i) {
-		vertexVals[i] = new GLfloat*[dim];
-
-		for (GLint j = 0; j < dim; ++j) {
-			vertexVals[i][j] = new GLfloat[dim];
-
-			for (GLint k = 0; k < dim; ++k) {
-				x = vertexCoord[0][i];
-				y = vertexCoord[1][j];
-				z = vertexCoord[2][k];
-				vertices[i][j][k] = isInsideTorus(x, y, z, r1, r2);
-				vertexVals[i][j][k] = torusImplicitFunction(x, y, z, r1, r2);
-			}
-		}
-	}
-
-	//for (int i = 0; i < dim; ++i) {
-	//	for (int j = 0; j < dim; ++j) {
-	//		std::cout << vertices[i][j][dim / 2] << " ";
-	//	}
-	//	std::cout << std::endl;
-	//}
-
-	// Go through every cube and check vertices;
-	// triangleVertices stores vertices of facets as {x0, y0, z0, x1, y1, z1, ..., xn, yn, zn}
-	std::vector<GLfloat> triangleVertices;
-	std::vector<GLfloat> temp;
-	for (GLint i = 0; i < dim - 1; ++i) {
-		for (GLint j = 0; j < dim - 1; ++j) {
-			for (GLint k = 0; k < dim - 1; ++k) {
-				byteArray[0] = vertices[i][j][k];
-				byteArray[1] = vertices[i + 1][j][k];
-				byteArray[2] = vertices[i + 1][j][k + 1];
-				byteArray[3] = vertices[i][j][k + 1];
-				byteArray[4] = vertices[i][j + 1][k];
-				byteArray[5] = vertices[i + 1][j + 1][k];
-				byteArray[6] = vertices[i + 1][j + 1][k + 1];
-				byteArray[7] = vertices[i][j + 1][k + 1];
-				int index = edgeListIndex(byteArray);
-
-				temp = findVertices(i, j, k, index, vertexCoord, vertexVals);
-				triangleVertices.insert(triangleVertices.end(), temp.begin(), temp.end());
-			}
-		}
-	}
-	std::cout << "mesh complete" << std::endl;
-
-	return triangleVertices;
-}
-
-bool isInsideGenus(GLfloat x, GLfloat y, GLfloat z) {
-	return (2*y*(y*y - 3*x*x)*(1 - z*z) + (x*x + y*y)*(x*x + y*y) - (9*z*z - 1)*(1 - z*z) <= 0);
-}
-
-GLfloat genusImplicitFunction(GLfloat x, GLfloat y, GLfloat z) {
-	return 2*y*(y*y - 3*x*x)*(1 - z*z) + (x*x + y*y)*(x*x + y*y) - (9*z*z - 1)*(1 - z*z);
-}
-
-std::vector<GLfloat> genGenusMesh() {
-	std::cout << "generating Genus mesh..." << std::endl;
-	GLfloat minX = -2.0f;
-	GLfloat minY = -2.0f;
-	GLfloat minZ = -2.0f;
-	GLfloat maxX = 2.0f;
-	GLfloat maxY = 2.0f;
-	GLfloat maxZ = 2.0f;
-	GLfloat x, y, z, a;
-	bool byteArray[8];
-
-
-	const GLint dim = 50; // number of vertices on bounding box edge
-	bool vertices[dim][dim][dim];
-
-	GLfloat* vertexCoord[3] = { new GLfloat[dim], new GLfloat[dim], new GLfloat[dim] };
-	for (GLint i = 0; i < dim; ++i) {
-		a = ((GLfloat)i / ((GLfloat)dim - 1));
-		x = maxX * a + minX * (1.0f - a);
-		y = maxY * a + minY * (1.0f - a);
-		z = maxZ * a + minZ * (1.0f - a);
-		vertexCoord[0][i] = x;
-		vertexCoord[1][i] = y;
-		vertexCoord[2][i] = z;
-	}
-
-	// vertices stores 0 or 1 depending on whether vertex is inside sphere or not
-	// vertexVals stores the actual value from the implicit function
-	GLfloat*** vertexVals = new GLfloat**[dim];
-	for (GLint i = 0; i < dim; ++i) {
-		vertexVals[i] = new GLfloat*[dim];
-
-		for (GLint j = 0; j < dim; ++j) {
-			vertexVals[i][j] = new GLfloat[dim];
-
-			for (GLint k = 0; k < dim; ++k) {
-				x = vertexCoord[0][i];
-				y = vertexCoord[1][j];
-				z = vertexCoord[2][k];
-				vertices[i][j][k] = isInsideGenus(x, y, z);
-				vertexVals[i][j][k] = genusImplicitFunction(x, y, z);
-			}
-		}
-	}
-/*
-	for (int i = 0; i < dim; ++i) {
-		for (int j = 0; j < dim; ++j) {
-			std::cout << vertices[i][j][dim / 2] << " ";
-		}
-		std::cout << std::endl;
-	}
-*/
-	// Go through every cube and check vertices;
-	// triangleVertices stores vertices of facets as {x0, y0, z0, x1, y1, z1, ..., xn, yn, zn}
-	std::vector<GLfloat> triangleVertices;
-	std::vector<GLfloat> temp;
-	for (GLint i = 0; i < dim - 1; ++i) {
-		for (GLint j = 0; j < dim - 1; ++j) {
-			for (GLint k = 0; k < dim - 1; ++k) {
-				byteArray[0] = vertices[i][j][k];
-				byteArray[1] = vertices[i + 1][j][k];
-				byteArray[2] = vertices[i + 1][j][k + 1];
-				byteArray[3] = vertices[i][j][k + 1];
-				byteArray[4] = vertices[i][j + 1][k];
-				byteArray[5] = vertices[i + 1][j + 1][k];
-				byteArray[6] = vertices[i + 1][j + 1][k + 1];
-				byteArray[7] = vertices[i][j + 1][k + 1];
-				int index = edgeListIndex(byteArray);
-
-				temp = findVertices(i, j, k, index, vertexCoord, vertexVals);
-				triangleVertices.insert(triangleVertices.end(), temp.begin(), temp.end());
-			}
-		}
-	}
-	std::cout << "mesh complete" << std::endl;
-
-	return triangleVertices;
-}
-
-GLfloat a = 2;
-GLfloat b = 0.2f;
-
-bool isInsideTrefoil(GLfloat x, GLfloat y, GLfloat z) {
-return ((-8*(x*x + y*y)*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b) + 4*a*a*(2*(x*x + y*y)*(x*x + y*y)
-		- (x*x*x - 3*x*y*y)*(x*x + y*y + 1)) + 8*a*a*(3*x*x*y - y*y*y)*z + 4*a*a*(x*x*x - 3*x*y*y)*z*z)
-		* (-8*(x*x + y*y)*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b) + 4*a*a*(2*(x*x + y*y)*(x*x + y*y)
-				- (x*x*x - 3*x*y*y)*(x*x + y*y + 1)) + 8*a*a*(3*x*x*y - y*y*y)*z + 4*a*a*(x*x*x - 3*x*y*y)*z*z)
-		- (x*x + y*y)*(2*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b)*(x*x + y*y + 1 + z*z + a*a - b*b) + 8*(x*x + y*y)*(x*x + y*y)
-				+ 4*a*a*(2*(x*x*x - 3*x*y*y) - (x*x + y*y)*(x*x + y*y + 1)) - 8*a*a*(3*x*x*y - y*y*y)*z - 4*(x*x + y*y)*a*a*z*z)
-				* (2*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b)*(x*x + y*y + 1 + z*z + a*a - b*b) + 8*(x*x + y*y)*(x*x + y*y)
-						+ 4*a*a*(2*(x*x*x - 3*x*y*y) - (x*x + y*y)*(x*x + y*y + 1)) - 8*a*a*(3*x*x*y - y*y*y)*z - 4*(x*x + y*y)*a*a*z*z) <= 0);
-}
-
-GLfloat trefoilImplicitFunction(GLfloat x, GLfloat y, GLfloat z) {
-
-return (-8*(x*x + y*y)*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b) + 4*a*a*(2*(x*x + y*y)*(x*x + y*y)
-		- (x*x*x - 3*x*y*y)*(x*x + y*y + 1)) + 8*a*a*(3*x*x*y - y*y*y)*z + 4*a*a*(x*x*x - 3*x*y*y)*z*z)
-		* (-8*(x*x + y*y)*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b) + 4*a*a*(2*(x*x + y*y)*(x*x + y*y)
-				- (x*x*x - 3*x*y*y)*(x*x + y*y + 1)) + 8*a*a*(3*x*x*y - y*y*y)*z + 4*a*a*(x*x*x - 3*x*y*y)*z*z)
-		- (x*x + y*y)*(2*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b)*(x*x + y*y + 1 + z*z + a*a - b*b) + 8*(x*x + y*y)*(x*x + y*y)
-				+ 4*a*a*(2*(x*x*x - 3*x*y*y) - (x*x + y*y)*(x*x + y*y + 1)) - 8*a*a*(3*x*x*y - y*y*y)*z - 4*(x*x + y*y)*a*a*z*z)
-				* (2*(x*x + y*y)*(x*x + y*y + 1 + z*z + a*a - b*b)*(x*x + y*y + 1 + z*z + a*a - b*b) + 8*(x*x + y*y)*(x*x + y*y)
-						+ 4*a*a*(2*(x*x*x - 3*x*y*y) - (x*x + y*y)*(x*x + y*y + 1)) - 8*a*a*(3*x*x*y - y*y*y)*z - 4*(x*x + y*y)*a*a*z*z);
-}
-
-std::vector<GLfloat> genTrefoilMesh() {
-std::cout << "generating trefoil mesh..." << std::endl;
-GLfloat minX = -2.0f;
-GLfloat minY = -2.0f;
-GLfloat minZ = -2.0f;
-GLfloat maxX = 2.0f;
-GLfloat maxY = 2.0f;
-GLfloat maxZ = 2.0f;
-GLfloat x, y, z, a;
-bool byteArray[8];
-
-const GLint dim = 100; // number of vertices on bounding box edge
-bool vertices[dim][dim][dim];
-
-GLfloat* vertexCoord[3] = { new GLfloat[dim], new GLfloat[dim], new GLfloat[dim] };
-for (GLint i = 0; i < dim; ++i) {
-	a = ((GLfloat)i / ((GLfloat)dim - 1));
-	x = maxX * a + minX * (1.0f - a);
-	y = maxY * a + minY * (1.0f - a);
-	z = maxZ * a + minZ * (1.0f - a);
-	vertexCoord[0][i] = x;
-	vertexCoord[1][i] = y;
-	vertexCoord[2][i] = z;
-}
-
-// vertices stores 0 or 1 depending on whether vertex is inside sphere or not
-// vertexVals stores the actual value from the implicit function
-GLfloat*** vertexVals = new GLfloat**[dim];
-for (GLint i = 0; i < dim; ++i) {
-	vertexVals[i] = new GLfloat*[dim];
-
-	for (GLint j = 0; j < dim; ++j) {
-		vertexVals[i][j] = new GLfloat[dim];
-
-		for (GLint k = 0; k < dim; ++k) {
-			x = vertexCoord[0][i];
-			y = vertexCoord[1][j];
-			z = vertexCoord[2][k];
-			vertices[i][j][k] = isInsideTrefoil(x, y, z);
-			vertexVals[i][j][k] = trefoilImplicitFunction(x, y, z);
-		}
-	}
-}
-/*
-for (int i = 0; i < dim; ++i) {
-	for (int j = 0; j < dim; ++j) {
-		std::cout << vertices[i][j][dim / 2] << " ";
-	}
-	std::cout << std::endl;
-}
-*/
-// Go through every cube and check vertices;
-// triangleVertices stores vertices of facets as {x0, y0, z0, x1, y1, z1, ..., xn, yn, zn}
-std::vector<GLfloat> triangleVertices;
-std::vector<GLfloat> temp;
-for (GLint i = 0; i < dim - 1; ++i) {
-	for (GLint j = 0; j < dim - 1; ++j) {
-		for (GLint k = 0; k < dim - 1; ++k) {
-			byteArray[0] = vertices[i][j][k];
-			byteArray[1] = vertices[i + 1][j][k];
-			byteArray[2] = vertices[i + 1][j][k + 1];
-			byteArray[3] = vertices[i][j][k + 1];
-			byteArray[4] = vertices[i][j + 1][k];
-			byteArray[5] = vertices[i + 1][j + 1][k];
-			byteArray[6] = vertices[i + 1][j + 1][k + 1];
-			byteArray[7] = vertices[i][j + 1][k + 1];
-			int index = edgeListIndex(byteArray);
-
-			temp = findVertices(i, j, k, index, vertexCoord, vertexVals);
-			triangleVertices.insert(triangleVertices.end(), temp.begin(), temp.end());
-		}
-	}
-}
-std::cout << "mesh complete" << std::endl;
-
-return triangleVertices;
 }
 
 // handle input

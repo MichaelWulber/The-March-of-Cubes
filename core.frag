@@ -2,7 +2,6 @@
 
 in vec3 vBC;
 in vec3 f_col;
-in vec3 e_col;
 in vec4 surf_norm;
 
 out vec4 color;
